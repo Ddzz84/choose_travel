@@ -1,118 +1,276 @@
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
+import moment, { Moment } from "moment";
+import { useEffect, useState } from "react";
+import DatePicker from "react-datepicker";
+import { FlightDown, FlightUp, Pencil } from "../components/icons";
+import { Rating } from "../components/componets";
 
-const inter = Inter({ subsets: ['latin'] })
+type flightType = {
+    start: Moment;
+    end: Moment;
+    company: string;
+    price: number;
+};
+
+export interface travelType {
+    country: string;
+    city: string;
+    flight: Partial<flightType>;
+    rating?: number;
+}
 
 export default function Home() {
-  return (
-    <main
-      className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
-    >
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">pages/index.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    const [travels, setTravels] = useState<travelType[]>([]);
+    const [travel, setTravel] = useState<Partial<travelType>>({});
+    const [order, setOrder] = useState<keyof travelType | keyof flightType>(
+        "price"
+    );
+
+    //still data
+    useEffect(() => {
+        fetch("/api/actions?data=1")
+            .then((r) => r.json())
+            .then((t: any) => {
+                console.log(t);
+                setTravels(
+                    t.map((tt: travelType) => ({
+                        ...tt,
+                        flight: {
+                            ...tt.flight,
+                            start: moment(tt.flight.start),
+                            end: moment(tt.flight.end),
+                        },
+                    }))
+                );
+            });
+    }, []);
+
+    useEffect(() => {
+        if (travels.length > 0)
+            fetch("/api/actions?data=1", {
+                method: "POST",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(travels),
+            });
+    }, [travels]);
+
+    return (
+        <div className="container mx-auto p-8">
+            <div className="">
+                <h1 className="text-2xl font-bold">
+                    Finder flight for the our birthday
+                </h1>
+                <div className="card shadow-md mt-6 w-1/2 bg-slate-100 mb-8">
+                    <div className="card-body">
+                        <h4 className="font-bold">Editor:</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                            <label htmlFor="">Country</label>
+                            <input
+                                type="text"
+                                className="input input-bordered w-full input-sm"
+                                value={travel?.country}
+                                onChange={(e) =>
+                                    setTravel({
+                                        ...travel,
+                                        country: e.target.value,
+                                    })
+                                }
+                            />
+                            <label htmlFor="">City</label>
+                            <input
+                                type="text"
+                                className="input input-bordered w-full input-sm"
+                                value={travel?.city}
+                                onChange={(e) =>
+                                    setTravel({
+                                        ...travel,
+                                        city: e.target.value,
+                                    })
+                                }
+                            />
+                        </div>
+                        <b>Flight:</b>
+                        <div className="grid grid-cols-4 gap-4">
+                            <label htmlFor="">Start</label>
+                            <DatePicker
+                                className="input input-sm w-full input-bordered"
+                                showTimeSelect
+                                selected={
+                                    travel.flight?.start?.toDate() || null
+                                }
+                                onChange={(e) =>
+                                    setTravel({
+                                        ...travel,
+                                        flight: {
+                                            ...(travel.flight || {}),
+                                            start: moment(e),
+                                        },
+                                    })
+                                }
+                                dateFormat="MM/dd HH:mm"
+                            />
+
+                            <label htmlFor="">End</label>
+                            <DatePicker
+                                className="input input-sm w-full input-bordered"
+                                showTimeSelect
+                                selected={travel.flight?.end?.toDate() || null}
+                                onChange={(e) =>
+                                    setTravel({
+                                        ...travel,
+                                        flight: {
+                                            ...(travel.flight || {}),
+                                            end: moment(e),
+                                        },
+                                    })
+                                }
+                                dateFormat="MM/dd HH:mm"
+                            />
+                            <label htmlFor="">Company</label>
+                            <input
+                                type="text"
+                                className="input input-bordered w-full input-sm"
+                                value={travel.flight?.company}
+                                onChange={(e) =>
+                                    setTravel({
+                                        ...travel,
+                                        flight: {
+                                            ...(travel.flight || {}),
+                                            company: e.target.value,
+                                        },
+                                    })
+                                }
+                            />
+                            <label htmlFor="">Price</label>
+                            <input
+                                type="number"
+                                className="input input-bordered w-full input-sm"
+                                value={travel.flight?.price}
+                                onChange={(e) =>
+                                    setTravel({
+                                        ...travel,
+                                        flight: {
+                                            ...(travel.flight || {}),
+                                            price: parseFloat(e.target.value),
+                                        },
+                                    })
+                                }
+                            />
+                        </div>
+                        <button
+                            className="btn btn-sm btn-success"
+                            onClick={() => {
+                                setTravels([...travels, travel as travelType]);
+                                setTravel({
+                                    city: "",
+                                    country: "",
+                                    flight: { company: "", price: undefined },
+                                });
+                            }}
+                        >
+                            Save
+                        </button>
+                    </div>
+                </div>
+                <hr />
+                <div className="mt-4 flex gap-3 text-sm text-gray-500">
+                    Order:
+                    <button
+                        className={
+                            "btn btn-sm btn-circle " +
+                            (order === "price" ? " btn-active" : "")
+                        }
+                        onClick={() => {
+                            setOrder("price");
+                        }}
+                    >
+                        €
+                    </button>
+                    <button
+                        className={
+                            "btn btn-sm btn-circle " +
+                            (order === "rating" ? " btn-active" : "")
+                        }
+                        onClick={() => {
+                            setOrder("rating");
+                        }}
+                    >
+                        ★
+                    </button>
+                </div>
+                <div className="flex gap-2 text-xs mt-2">
+                    {travels
+                        .sort((a, b) =>
+                            order === "price"
+                                ? (a.flight.price || 0) > (b.flight.price || 0)
+                                    ? 1
+                                    : -1
+                                : (a.rating || 1) > (b.rating || 1)
+                                ? 1
+                                : -1
+                        )
+                        .map((t, i) => (
+                            <div
+                                className="stats shadow cursor-pointer bg-slate-50"
+                                key={t.city + i}
+                            >
+                                <div className="stat">
+                                    <div className="stat-title text-base">
+                                        <b className=" text-red-600 text-lg">
+                                            {t.city}
+                                        </b>{" "}
+                                        {"|"} {t.country}{" "}
+                                        <b>
+                                            [ {t.flight.start?.format("D")} -{" "}
+                                            {t.flight.end?.format("D")} ]
+                                        </b>
+                                        <button
+                                            className="btn btn-xs btn-circle ml-4 -mr-2"
+                                            onClick={() => {
+                                                travels.splice(i, 1);
+                                                setTravel(t);
+                                                setTravels(travels);
+                                            }}
+                                        >
+                                            <Pencil />
+                                        </button>
+                                    </div>
+                                    <div className="stat-value">
+                                        {new Intl.NumberFormat("en-DE").format(
+                                            t.flight.price || 0
+                                        )}{" "}
+                                        €
+                                    </div>
+                                    <div className="stat-desc text-base text-blue-600 flex gap-2">
+                                        <b>{t.flight.company}</b> {":"}{" "}
+                                        <span className="flex">
+                                            <FlightUp />{" "}
+                                            {t.flight.start?.format("HH:mm")}
+                                        </span>
+                                        <span className="flex">
+                                            <FlightDown />{" "}
+                                            {t.flight.end?.format("HH:mm")}
+                                        </span>
+                                    </div>
+                                    <Rating
+                                        name={`r_${i}`}
+                                        value={t.rating || 1}
+                                        onChange={(r) => {
+                                            const tt = [...travels];
+                                            tt.splice(i, 1);
+                                            setTravels([
+                                                ...tt,
+                                                { ...t, rating: r },
+                                            ]);
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                </div>
+            </div>
         </div>
-      </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700/10 after:dark:from-sky-900 after:dark:via-[#0141ff]/40 before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Discover and deploy boilerplate example Next.js&nbsp;projects.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+    );
 }
