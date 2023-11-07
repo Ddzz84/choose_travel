@@ -32,14 +32,16 @@ export default function Home() {
             .then((t: any) => {
                 console.log(t);
                 setTravels(
-                    t.map((tt: travelType) => ({
-                        ...tt,
-                        flight: {
-                            ...tt.flight,
-                            start: moment(tt.flight.start),
-                            end: moment(tt.flight.end),
-                        },
-                    }))
+                    (Object.values(t) as travelType[]).map(
+                        (tt: travelType) => ({
+                            ...tt,
+                            flight: {
+                                ...tt.flight,
+                                start: moment(tt.flight.start),
+                                end: moment(tt.flight.end),
+                            },
+                        })
+                    )
                 );
             });
     }, []);
