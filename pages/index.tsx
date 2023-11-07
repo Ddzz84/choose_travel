@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import { FlightDown, FlightUp, Pencil } from "../components/icons";
 import { Rating } from "../components/componets";
+import { QueryResult, QueryResultRow } from "@vercel/postgres";
 
 type flightType = {
     start: Moment;
@@ -12,6 +13,7 @@ type flightType = {
 };
 
 export interface travelType {
+    id?: number;
     country: string;
     city: string;
     flight: Partial<flightType>;
@@ -19,43 +21,44 @@ export interface travelType {
 }
 
 export default function Home() {
-    const [travels, setTravels] = useState<travelType[]>([]);
-    const [travel, setTravel] = useState<Partial<travelType>>({});
+    const [travels, setTravels] = useState<travelType[]>();
+    const [travel, setTravel] = useState<Partial<travelType>>();
     const [order, setOrder] = useState<keyof travelType | keyof flightType>(
         "price"
     );
 
     //still data
     useEffect(() => {
-        fetch("/api/actions?data=1")
-            .then((r) => r.json())
-            .then((t: any) => {
-                console.log(t);
-                setTravels(
-                    (Object.values(t) as travelType[]).map(
-                        (tt: travelType) => ({
-                            ...tt,
-                            flight: {
-                                ...tt.flight,
-                                start: moment(tt.flight.start),
-                                end: moment(tt.flight.end),
-                            },
-                        })
-                    )
-                );
-            });
+        if (!travels)
+            fetch("/api/actions?data=1")
+                .then((r) => r.json())
+                .then((t: QueryResult<QueryResultRow>) => {
+                    console.log(t.fields, t.rows);
+
+                    // setTravels(
+                    //     (rr as travelType[]).map((tt: travelType) => ({
+                    //         ...tt,
+                    //         flight: {
+                    //             ...tt.flight,
+                    //             start: moment(tt.flight.start),
+                    //             end: moment(tt.flight.end),
+                    //         },
+                    //     }))
+                    // );
+                });
     }, []);
 
     useEffect(() => {
-        if (travels.length > 0)
+        if (travel)
             fetch("/api/actions?data=1", {
                 method: "POST",
                 headers: {
                     Accept: "application/json",
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(travels),
+                body: JSON.stringify({ rating: 1, ...travel }),
             });
+        setTravel(undefined);
     }, [travels]);
 
     return (
@@ -75,7 +78,7 @@ export default function Home() {
                                 value={travel?.country}
                                 onChange={(e) =>
                                     setTravel({
-                                        ...travel,
+                                        ...(travel || {}),
                                         country: e.target.value,
                                     })
                                 }
@@ -87,7 +90,7 @@ export default function Home() {
                                 value={travel?.city}
                                 onChange={(e) =>
                                     setTravel({
-                                        ...travel,
+                                        ...(travel || {}),
                                         city: e.target.value,
                                     })
                                 }
@@ -100,13 +103,13 @@ export default function Home() {
                                 className="input input-sm w-full input-bordered"
                                 showTimeSelect
                                 selected={
-                                    travel.flight?.start?.toDate() || null
+                                    travel?.flight?.start?.toDate() || null
                                 }
                                 onChange={(e) =>
                                     setTravel({
-                                        ...travel,
+                                        ...(travel || {}),
                                         flight: {
-                                            ...(travel.flight || {}),
+                                            ...(travel?.flight || {}),
                                             start: moment(e),
                                         },
                                     })
@@ -118,12 +121,12 @@ export default function Home() {
                             <DatePicker
                                 className="input input-sm w-full input-bordered"
                                 showTimeSelect
-                                selected={travel.flight?.end?.toDate() || null}
+                                selected={travel?.flight?.end?.toDate() || null}
                                 onChange={(e) =>
                                     setTravel({
-                                        ...travel,
+                                        ...(travel || {}),
                                         flight: {
-                                            ...(travel.flight || {}),
+                                            ...(travel?.flight || {}),
                                             end: moment(e),
                                         },
                                     })
@@ -134,12 +137,12 @@ export default function Home() {
                             <input
                                 type="text"
                                 className="input input-bordered w-full input-sm"
-                                value={travel.flight?.company}
+                                value={travel?.flight?.company}
                                 onChange={(e) =>
                                     setTravel({
-                                        ...travel,
+                                        ...(travel || {}),
                                         flight: {
-                                            ...(travel.flight || {}),
+                                            ...(travel?.flight || {}),
                                             company: e.target.value,
                                         },
                                     })
@@ -149,12 +152,12 @@ export default function Home() {
                             <input
                                 type="number"
                                 className="input input-bordered w-full input-sm"
-                                value={travel.flight?.price}
+                                value={travel?.flight?.price}
                                 onChange={(e) =>
                                     setTravel({
-                                        ...travel,
+                                        ...(travel || {}),
                                         flight: {
-                                            ...(travel.flight || {}),
+                                            ...(travel?.flight || {}),
                                             price: parseFloat(e.target.value),
                                         },
                                     })
@@ -164,12 +167,10 @@ export default function Home() {
                         <button
                             className="btn btn-sm btn-success"
                             onClick={() => {
-                                setTravels([...travels, travel as travelType]);
-                                setTravel({
-                                    city: "",
-                                    country: "",
-                                    flight: { company: "", price: undefined },
-                                });
+                                setTravels([
+                                    ...(travels || []),
+                                    travel as travelType,
+                                ]);
                             }}
                         >
                             Save
@@ -203,7 +204,7 @@ export default function Home() {
                     </button>
                 </div>
                 <div className="flex gap-2 text-xs mt-2">
-                    {travels
+                    {(travels || [])
                         .sort((a, b) =>
                             order === "price"
                                 ? (a.flight.price || 0) > (b.flight.price || 0)
@@ -231,9 +232,9 @@ export default function Home() {
                                         <button
                                             className="btn btn-xs btn-circle ml-4 -mr-2"
                                             onClick={() => {
-                                                travels.splice(i, 1);
+                                                (travels || []).splice(i, 1);
                                                 setTravel(t);
-                                                setTravels(travels);
+                                                setTravels(travels || []);
                                             }}
                                         >
                                             <Pencil />
@@ -260,7 +261,7 @@ export default function Home() {
                                         name={`r_${i}`}
                                         value={t.rating || 1}
                                         onChange={(r) => {
-                                            const tt = [...travels];
+                                            const tt = [...(travels || [])];
                                             tt.splice(i, 1);
                                             setTravels([
                                                 ...tt,
