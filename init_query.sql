@@ -1,11 +1,11 @@
 create table flights (
-    id serial PRIMARY KEY,
+    id INT PRIMARY KEY,
     desc_txt text,
     username varchar (80),
     country varchar (100) not null,
     city  varchar (100) not null,
-    flight json,
+    flight JSON,
     rating smallint,
-	created_on TIMESTAMP NOT NULL,
-    updated_on TIMESTAMP
+	created_on INT,
+    updated_on INT
 )
