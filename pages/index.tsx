@@ -236,7 +236,7 @@ const ListTravels: React.FC<{
                     ★
                 </button>
             </div>
-            <div className="flex gap-2 text-xs mt-2">
+            <div className="flex gap-2 text-xs mt-2 flex-wrap">
                 {(travels || [])
                     .sort((a, b) =>
                         order === "price"
