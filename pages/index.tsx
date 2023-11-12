@@ -44,6 +44,7 @@ export default function Home() {
                         }))
                     );
                 });
+        localStorage.theme = "light";
     }, []);
 
     useEffect(() => {
@@ -313,6 +314,7 @@ const ListTravels: React.FC<{
                                     onChange={(r) => {
                                         const tt = [...(travels || [])];
                                         tt.splice(i, 1);
+                                        setTravel({ ...t, rating: r });
                                         setTravels([
                                             ...tt,
                                             { ...t, rating: r },
