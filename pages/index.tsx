@@ -71,7 +71,7 @@ export default function Home() {
     }, [travels]);
     console.log({ travel });
     return (
-        <div className="container mx-auto p-8">
+        <div className="container mx-auto p-8 bg-slate-100 text-black">
             <div className="">
                 <h1 className="text-2xl font-bold">
                     Finder flight for the our birthday
