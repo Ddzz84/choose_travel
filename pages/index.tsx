@@ -1,7 +1,13 @@
 import moment, { Moment } from "moment";
 import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
-import { FlightDown, FlightUp, Pencil, Trash } from "../components/icons";
+import {
+    FlightDown,
+    FlightUp,
+    LinkFill,
+    Pencil,
+    Trash,
+} from "../components/icons";
 import { Rating } from "../components/componets";
 import { Analytics } from "@vercel/analytics/react";
 
@@ -18,6 +24,7 @@ export interface travelType {
     city: string;
     flight: Partial<flightType>;
     rating?: number;
+    link?: string;
 }
 
 export default function Home() {
@@ -76,7 +83,7 @@ export default function Home() {
     }, [travels]);
     console.log({ travel });
     return (
-        <div className="container mx-auto p-8 bg-slate-100 text-black">
+        <div className="container w-full max-w-full p-8 bg-slate-100 text-black">
             <div className="">
                 <h1 className="text-2xl font-bold">
                     Finder flight for the our birthday
@@ -88,7 +95,7 @@ export default function Home() {
                             <label htmlFor="">Country</label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full input-sm"
+                                className="input input-bordered w-full input-sm bg-slate-100 text-black"
                                 value={travel?.country}
                                 onChange={(e) =>
                                     setTravel({
@@ -100,7 +107,7 @@ export default function Home() {
                             <label htmlFor="">City</label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full input-sm"
+                                className="input input-bordered w-full input-sm bg-slate-100 text-black"
                                 value={travel?.city}
                                 onChange={(e) =>
                                     setTravel({
@@ -114,7 +121,7 @@ export default function Home() {
                         <div className="grid grid-cols-4 gap-4">
                             <label htmlFor="">Start</label>
                             <DatePicker
-                                className="input input-sm w-full input-bordered"
+                                className="input input-sm w-full input-bordered bg-slate-100 text-black"
                                 showTimeSelect
                                 selected={
                                     travel?.flight?.start?.toDate() || null
@@ -133,7 +140,7 @@ export default function Home() {
 
                             <label htmlFor="">End</label>
                             <DatePicker
-                                className="input input-sm w-full input-bordered"
+                                className="input input-sm w-full input-bordered bg-slate-100 text-black"
                                 showTimeSelect
                                 selected={travel?.flight?.end?.toDate() || null}
                                 onChange={(e) =>
@@ -150,7 +157,7 @@ export default function Home() {
                             <label htmlFor="">Company</label>
                             <input
                                 type="text"
-                                className="input input-bordered w-full input-sm"
+                                className="input input-bordered w-full input-sm bg-slate-100 text-black"
                                 value={travel?.flight?.company}
                                 onChange={(e) =>
                                     setTravel({
@@ -165,7 +172,7 @@ export default function Home() {
                             <label htmlFor="">Price</label>
                             <input
                                 type="number"
-                                className="input input-bordered w-full input-sm"
+                                className="input input-bordered w-full input-sm bg-slate-100 text-black"
                                 value={travel?.flight?.price}
                                 onChange={(e) =>
                                     setTravel({
@@ -174,6 +181,20 @@ export default function Home() {
                                             ...(travel?.flight || {}),
                                             price: parseFloat(e.target.value),
                                         },
+                                    })
+                                }
+                            />
+                        </div>
+                        <div className="grid grid-cols-2">
+                            <label>URL</label>
+                            <input
+                                type="text"
+                                className="input input-bordered w-full input-sm bg-slate-100 text-black"
+                                value={travel?.link}
+                                onChange={(e) =>
+                                    setTravel({
+                                        ...(travel || {}),
+                                        link: e.target.value,
                                     })
                                 }
                             />
@@ -313,19 +334,28 @@ const ListTravels: React.FC<{
                                         {t.flight.end?.format("HH:mm")}
                                     </span>
                                 </div>
-                                <Rating
-                                    name={`r_${i}`}
-                                    value={t.rating || 1}
-                                    onChange={(r) => {
-                                        const tt = [...(travels || [])];
-                                        tt.splice(i, 1);
-                                        setTravel({ ...t, rating: r });
-                                        setTravels([
-                                            ...tt,
-                                            { ...t, rating: r },
-                                        ]);
-                                    }}
-                                />
+                                <div className="flex justify-between">
+                                    <Rating
+                                        name={`r_${i}`}
+                                        value={t.rating || 1}
+                                        onChange={(r) => {
+                                            const tt = [...(travels || [])];
+                                            tt.splice(i, 1);
+                                            setTravel({ ...t, rating: r });
+                                            setTravels([
+                                                ...tt,
+                                                { ...t, rating: r },
+                                            ]);
+                                        }}
+                                    />
+                                    <a
+                                        className="btn link btn-xs btn-circle"
+                                        target="_blank"
+                                        href={t.link}
+                                    >
+                                        <LinkFill />
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     ))}
