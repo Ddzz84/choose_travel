@@ -59,6 +59,11 @@ export default function Home() {
                     rating: 1,
                     ...travel,
                     id: travel.id || Date.now(),
+                    flight: {
+                        ...travel.flight,
+                        start: travel.flight?.start?.format("YYYY-MM-DD HH:mm"),
+                        end: travel.flight?.end?.format("YYYY-MM-DD HH:mm"),
+                    },
                 }),
             });
         }
